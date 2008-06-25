@@ -44,6 +44,9 @@ BEGIN {
 This module implements a number of MIDI tweaks using the Sean Burke's
 MIDI module.
 
+Warning: THis module is still under development. The interface to the
+methods may change when new features are added.
+
 =head1 CONSTANTS
 
 The following constants will be exported by default.
