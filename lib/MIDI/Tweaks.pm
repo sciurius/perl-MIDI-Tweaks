@@ -13,7 +13,7 @@ Version 0.01
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 use MIDI;
 use Carp;
@@ -316,11 +316,11 @@ sub MIDI::Opus::dump { # method; read-only
 
 =cut
 
-package MIDI::Track;
+# We cannot use package MIDI::Track, since that is owbed by MIDI.pm.
+package MIDI::Tweaks;
 
 use strict;
 use warnings;
-use MIDI::Tweaks;
 use Carp;
 
 =head2 MIDI::Track::name
@@ -330,7 +330,7 @@ If none was found, returns undef.
 
 =cut
 
-sub name {
+sub MIDI::Track::name {
     my $track = shift;
     foreach my $e ( $track->events ) {
 	if (  $e->[EV_TYPE] eq 'track_name' ) {
@@ -352,7 +352,7 @@ time2delta.
 
 =cut
 
-sub delta2time {
+sub MIDI::Track::delta2time {
     my ($self, $force) = @_;
 
     if ( $self->{_tweaky_abstime} ) {
@@ -379,7 +379,7 @@ track valid MIDI data again.
 
 =cut
 
-sub time2delta {
+sub MIDI::Track::time2delta {
     my ($self, $force) = @_;
 
     unless ( $self->{_tweaky_abstime} ) {
@@ -409,7 +409,7 @@ a track does not have sensible events.
 
 =cut
 
-sub has_deltatime {
+sub MIDI::Track::has_deltatime {
     my ($self) = @_;
     my $time = 0;
     foreach my $e ( $self->events ) {
@@ -443,7 +443,7 @@ Examples:
 
 =cut
 
-sub mapper {
+sub MIDI::Track::mapper {
     my $track = shift;
 
     my $opts = {};
@@ -484,7 +484,7 @@ change this setting.
 
 =cut
 
-sub change_velocity {
+sub MIDI::Track::change_velocity {
     my $track = shift;
     my $args = shift;
     croak("MIDI::Track::change_velocity requires a HASH argument")
@@ -532,7 +532,7 @@ Any remaining options are passed to the mapper function.
 
 =cut
 
-sub change_volume {
+sub MIDI::Track::change_volume {
     my $track = shift;
     my $args = shift;
     croak("MIDI::Track::change_volume requires a HASH argument")
@@ -588,7 +588,7 @@ This method returns a list, the higher track and the lower track.
 
 =cut
 
-sub split_pitch {
+sub MIDI::Track::split_pitch {
     my ($track, $args) = @_;
     $args ||= {};
     croak("MIDI::Track::split_pitch requires a HASH argument")
@@ -660,7 +660,7 @@ tracks. Sorry.
 
 =cut
 
-sub split_hilo {
+sub MIDI::Track::split_hilo {
     my ($track) = @_;
 
     croak("MIDI::Track::split_hilo: FATAL: track has delta times")
@@ -749,7 +749,7 @@ tracks. Sorry.
 
 =cut
 
-sub split_hml {
+sub MIDI::Track::split_hml {
     my ($track) = @_;
 
     croak("MIDI::Track::split_hml: FATAL: track has delta times")
