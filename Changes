@@ -1,9 +1,13 @@
 Revision history for MIDI-Tweaks
 
-0.02    Date/time
+0.03    Date/time
+	Improve program logic and docs.
+	Make less obfuscated by using better variable names.
+
+0.02    2008-06-25 16:47
 	Removed the use of "package MIDI::Track" since that is
 	prohibited by the CPAN indexer.
 
-0.01    2008-06-25/10:27
+0.01    2008-06-25 10:27
         First version, released on an unsuspecting world.
 
