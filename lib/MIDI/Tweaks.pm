@@ -7,13 +7,9 @@ use strict;
 
 MIDI::Tweaks - Enhancements to MIDI.pm.
 
-=head1 VERSION
-
-Version 0.01
-
 =cut
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 use MIDI;
 use Carp;
@@ -44,7 +40,27 @@ BEGIN {
 This module implements a number of MIDI tweaks using the Sean Burke's
 MIDI module.
 
-Warning: THis module is still under development. The interface to the
+    # Read midi data.
+    my $op = new MIDI::Tweaks::Opus ({ from_file => "orig.mid" });
+
+    # Reset all volume controls.
+    $_->change_volume({ value => 100 }) foreach $op->tracks;
+
+    my $track0  = $op->tracks_r->[0];
+    my $acc	= $op->tracks_r->[1]->change_velocity({ value =>  30 });
+    my $solo    = $op->tracks_r->[2]->change_velocity({ value => 110 });
+    my $high    = $op->tracks_r->[3]->change_velocity({ value => 100 });
+    my $low	= $op->tracks_r->[4]->change_velocity({ value => 100 });
+
+    # $low contains the middle + lower parts. Split.
+    (my $mid, $low) = $low->split_hilo;
+
+    # Produce a midi for low voice only.
+    $op->tracks($track0, $acc, $low);
+    $op->write_to_file("low.mid");
+
+
+Warning: This module is still under development. The interface to the
 methods may change when new features are added.
 
 =head1 CONSTANTS
@@ -221,9 +237,7 @@ sub check_sanity {
 	return if $allow_fail;
 	croak("Sanity check failed");
     }
-    else {
-	return 1;
-    }
+    return 1;
 }
 
 =head2 MIDI::Tweaks::Opus::delta2time
@@ -287,8 +301,13 @@ sub MIDI::Opus::dump { # method; read-only
     return;
   }
 
-  #print "MIDI::Opus->new({\n",
+  # This is the only change to the original code: replace the
+  # hard-wired class name MIDI::Opus with ref($this), so derived
+  # classes work.
+  # WAS: print "MIDI::Opus->new({\n",
+  # IS NOW:
   print ref($this), "->new({\n",
+  # End of change.
     "  'format' => ", &MIDI::_dump_quote($this->{'format'}), ",\n",
     "  'ticks'  => ", &MIDI::_dump_quote($this->{'ticks'}), ",\n";
 
@@ -333,10 +352,8 @@ If none was found, returns undef.
 sub MIDI::Track::name {
     my $track = shift;
     foreach my $e ( $track->events ) {
-	if (  $e->[EV_TYPE] eq 'track_name' ) {
-	    return $e->[EV_MARKER_NAME];
-	    last;
-	}
+	return $e->[EV_MARKER_NAME]
+	  if $e->[EV_TYPE] eq 'track_name';
     }
     return;
 }
@@ -366,7 +383,9 @@ sub MIDI::Track::delta2time {
     }
 
     $self->{_tweaky_abstime} = 1;
-    $self;
+
+    # For convenience:
+    return $self;
 }
 
 =head2 MIDI::Track::time2delta
@@ -396,7 +415,9 @@ sub MIDI::Track::time2delta {
     }
 
     delete $self->{_tweaky_abstime};
-    $self;
+
+    # For convenience:
+    return $self;
 }
 
 =head2 MIDI::Track::has_deltatime
@@ -485,36 +506,35 @@ change this setting.
 =cut
 
 sub MIDI::Track::change_velocity {
-    my $track = shift;
-    my $args = shift;
+    my ($track, $args) = @_;
     croak("MIDI::Track::change_velocity requires a HASH argument")
       unless ref($args) eq 'HASH';
 
-    my $c;
+    my $mapper_func;
 
     if ( $args->{value} ) {
-	my $v = int(delete $args->{value});
+	my $value = int(delete $args->{value});
 	croak("MIDI::Track::change_velocity: value should be between 0 and 127")
-	  unless $v >= 0 && $v <= 127;
+	  unless $value >= 0 && $value <= 127;
 
-	$c = sub {
+	$mapper_func = sub {
 	    return unless MIDI::Tweaks::is_note_on($_[0]);
-	    $_[0]->[EV_NOTE_VELO] = $v;
+	    $_[0]->[EV_NOTE_VELO] = $value;
 	};
     }
     elsif ( $args->{ratio} ) {
-	my $v = delete $args->{ratio};
-	$c = sub {
+	my $ratio = delete $args->{ratio};
+	$mapper_func = sub {
 	    return unless MIDI::Tweaks::is_note_on($_[0]);
-	    $_[0]->[EV_NOTE_VELO] = int($_[0]->[EV_NOTE_VELO] * $v);
+	    $_[0]->[EV_NOTE_VELO] = int($_[0]->[EV_NOTE_VELO] * $ratio);
 	    $_[0]->[EV_NOTE_VELO] = 127 if $_[0]->[EV_NOTE_VELO] > 127;
 	};
     }
 
     croak("MIDI::Track::change_velocity: Missing 'value' or 'ratio' option")
-      unless $c;
+      unless $mapper_func;
 
-    $track->mapper($args, $c);
+    $track->mapper($args, $mapper_func);
 }
 
 =head2 MIDI::Track::change_volume
@@ -533,40 +553,39 @@ Any remaining options are passed to the mapper function.
 =cut
 
 sub MIDI::Track::change_volume {
-    my $track = shift;
-    my $args = shift;
+    my ($track, $args) = @_;
     croak("MIDI::Track::change_volume requires a HASH argument")
       unless ref($args) eq 'HASH';
 
-    my $c;
+    my $mapper_func;
 
     if ( $args->{value} ) {
-	my $v = int(delete $args->{value});
+	my $value = int(delete $args->{value});
 	croak("MIDI::Track::change_volume: value should be between 0 and 127")
-	  unless $v >= 0 && $v <= 127;
+	  unless $value >= 0 && $value <= 127;
 
-	$c = sub {
+	$mapper_func = sub {
 	    return unless
 	      $_[0]->[0] eq 'control_change'
 	      && $_[0]->[3] == 7;
-	    $_[0]->[4] = $v;
+	    $_[0]->[4] = $value;
 	};
     }
     elsif ( $args->{ratio} ) {
-	my $v = delete $args->{ratio};
-	$c = sub {
+	my $ratio = delete $args->{ratio};
+	$mapper_func = sub {
 	    return unless
 	      $_[0]->[0] eq 'control_change'
 	      && $_[0]->[3] == 7;
-	    $_[0]->[4] = int($_[0]->[4] * $v);
+	    $_[0]->[4] = int($_[0]->[4] * $ratio);
 	    $_[0]->[4] = 127 if $_[0]->[4] > 127;
 	};
     }
 
     croak("MIDI::Track::change_volume: Missing 'value' or 'ratio' option")
-      unless $c;
+      unless $mapper_func;
 
-    $track->mapper($args, $c);
+    $track->mapper($args, $mapper_func);
 }
 
 =head2 MIDI::Track::split_pitch
@@ -578,9 +597,12 @@ a note event is lower than a preset value. Non-note events are copied
 to both tracks.
 
 The options hash may contain C<< pitch => number >> to specify the
-pitch value to split on. Default is 56. This is a suitable value to
-split a single MIDI track containing a piano part into left hand and
-right hand tracks.
+pitch value to split on. All notes whose pitches are less than the
+split value are copied to the lower track, all other notes are copied
+to the upper track.
+
+Default value is 56. This is a suitable value to split a single MIDI
+track containing a piano part into left hand and right hand tracks.
 
 All events are copied, and the track is not modified.
 
@@ -655,6 +677,9 @@ All events are copied, and the track is not modified.
 
 This method returns a list (high track, low track).
 
+NOTE: This process assumes that if there are two notes, they start and
+end at the same time.
+
 NOTE: This process discards all non-note events from the resultant
 tracks. Sorry.
 
@@ -670,42 +695,50 @@ sub MIDI::Track::split_hilo {
     my @lo;
     my $eqtimes = sub { $_[0]->[EV_TIME] == $_[1]->[EV_TIME] };
 
-    my @e = $track->events;
-    while ( @e ) {
-	my $e = shift(@e);
-	# Skip lyrics.
-	next if $e->[EV_TYPE] =~ /^lyric$/;
+    my @events = $track->events;
+    while ( @events ) {
+	my $this_event = shift(@events);
+	my $next_event = $events[0];
 
+	# Skip lyrics.
+	next if $this_event->[EV_TYPE] =~ /^lyric$/;
+
+	# Assert we're still in phase.
 	unless ( @hi == @lo ) {
 	    croak("!t1 = ", scalar(@hi), " events\n",
 		  "!t2 = ", scalar(@lo), " events\n");
 	}
 
-	unless ( MIDI::Tweaks::is_note_event($e)
-		 && @e && $eqtimes->($e, $e[0]) ) {
+	unless ( MIDI::Tweaks::is_note_event($this_event)
+		 && @events && $eqtimes->($this_event, $next_event) ) {
 	    # Copy.
-	    push(@hi, [@$e]);
-	    push(@lo, [@$e]);
+	    push(@hi, [@$this_event]);
+	    push(@lo, [@$this_event]);
 	    next;
 	}
 
-	if ( MIDI::Tweaks::is_note_on($e)  && MIDI::Tweaks::is_note_on($e[0])
+	if ( MIDI::Tweaks::is_note_on($this_event)
+	     && MIDI::Tweaks::is_note_on($next_event)
 	     or
-	     MIDI::Tweaks::is_note_off($e) && MIDI::Tweaks::is_note_off($e[0]) ) {
-	    my $o = shift(@e);
-	    if ( $e->[EV_NOTE_PITCH] > $o->[EV_NOTE_PITCH] ) {
-		push(@hi, $e);
-		push(@lo, $o);
+	     MIDI::Tweaks::is_note_off($this_event)
+	     && MIDI::Tweaks::is_note_off($next_event) ) {
+
+	    # Remove from events.
+	    shift(@events);
+
+	    if ( $this_event->[EV_NOTE_PITCH] > $next_event->[EV_NOTE_PITCH] ) {
+		push(@hi, [@$this_event]);
+		push(@lo, [@$next_event]);
 	    }
 	    else {
-		push(@hi, $o);
-		push(@lo, $e);
+		push(@hi, [@$next_event]);
+		push(@lo, [@$this_event]);
 	    }
 	}
 	else {
 	    # Not a multi-note, copy.
-	    push(@hi, [@$e]);
-	    push(@lo, [@$e]);
+	    push(@hi, [@$this_event]);
+	    push(@lo, [@$this_event]);
 	}
     }
 
@@ -744,6 +777,9 @@ All events are copied, and the track is not modified.
 
 This method returns a list (high track, middle track, low track).
 
+NOTE: This process assumes that if there are two or three notes, they
+start and end at the same time.
+
 NOTE: This process discards all non-note events from the resultant
 tracks. Sorry.
 
@@ -760,12 +796,13 @@ sub MIDI::Track::split_hml {
     my @lo;
     my $eqtimes = sub { $_[0]->[EV_TIME] == $_[1]->[EV_TIME] };
 
-    my @e = $track->events;
+    my @events = $track->events;
     my $time = 0;
 
-    while ( @e ) {
-	my $e = shift(@e);
-	next if $e->[EV_TYPE] =~ /^lyric$/;
+    while ( @events ) {
+	my $this_event = shift(@events);
+	my $next_event = $events[0];
+	next if $this_event->[EV_TYPE] =~ /^lyric$/;
 
 	unless ( @hi == @md && @md == @lo ) {
 	    croak("!t1 = ", scalar(@hi), " events\n",
@@ -773,55 +810,65 @@ sub MIDI::Track::split_hml {
 		  "!t3 = ", scalar(@lo), " events\n");
 	}
 
-	$time = $e->[EV_TIME];
+	$time = $this_event->[EV_TIME];
 
-	if ( MIDI::Tweaks::is_note_event($e) ) {
+	if ( MIDI::Tweaks::is_note_event($this_event) ) {
 	    # Check if there's a note already at this time.
-	    if ( MIDI::Tweaks::is_note_on($e)
-		 && @e && MIDI::Tweaks::is_note_on($e[0])
-		 && $eqtimes->($e, $e[0]) ) {
-		if ( MIDI::Tweaks::is_note_on($e[1])
-		     && $eqtimes->($e, $e[1]) ) {
+	    if ( MIDI::Tweaks::is_note_on($this_event)
+		 && @events && MIDI::Tweaks::is_note_on($next_event)
+		 && $eqtimes->($this_event, $next_event) ) {
+		if ( MIDI::Tweaks::is_note_on($events[1])
+		     && $eqtimes->($this_event, $events[1]) ) {
+		    # Remove next from events.
+		    shift(@events);
 		    # Store higher in hi, lower in md, etc.
+		    # (also removes afternext from events)
 		    my @a = sort {
 			$b->[EV_NOTE_PITCH] <=> $a->[EV_NOTE_PITCH]
-		    } ( $e, shift(@e), shift(@e) );
+		    } ( [@$this_event], [@$next_event], [@{shift(@events)}] );
 		    push(@hi, $a[0]);
 		    push(@md, $a[1]);
 		    push(@lo, $a[2]);
 		}
 		else {
+		    # Remove next from events.
+		    shift(@events);
 		    my @a = sort {
 			$b->[EV_NOTE_PITCH] <=> $a->[EV_NOTE_PITCH]
-		    } ( $e, shift(@e) );
+		    } ( [@$this_event], [@$next_event] );
 		    push(@hi, $a[0]);
 		    push(@md, $a[1]);
-		    push(@lo, [@{$a[1]}]);
+		    push(@lo, $a[1]);
 		}
 		$hi[-1]->[EV_TIME] = $time;
 		$md[-1]->[EV_TIME] = $time;
 		$lo[-1]->[EV_TIME] = $time;
 	    }
-	    elsif ( MIDI::Tweaks::is_note_off($e)
-		    && @e && MIDI::Tweaks::is_note_off($e[0])
-		    && $eqtimes->($e, $e[0]) ) {
-		if ( MIDI::Tweaks::is_note_off($e[1])
-		     && $eqtimes->($e, $e[1]) ) {
+	    elsif ( MIDI::Tweaks::is_note_off($this_event)
+		    && @events && MIDI::Tweaks::is_note_off($next_event)
+		    && $eqtimes->($this_event, $next_event) ) {
+		if ( MIDI::Tweaks::is_note_off($events[1])
+		     && $eqtimes->($this_event, $events[1]) ) {
+		    # Remove next from events.
+		    shift(@events);
 		    # Store higher in hi, lower in md, etc.
+		    # (also removes afternext from events)
 		    my @a = sort {
 			$b->[EV_NOTE_PITCH] <=> $a->[EV_NOTE_PITCH]
-		    } ( $e, shift(@e), shift(@e) );
+		    } ( [@$this_event], [@$next_event], [@{shift(@events)}] );
 		    push(@hi, $a[0]);
 		    push(@md, $a[1]);
 		    push(@lo, $a[2]);
 		}
 		else {
+		    # Remove next from events.
+		    shift(@events);
 		    my @a = sort {
 			$b->[EV_NOTE_PITCH] <=> $a->[EV_NOTE_PITCH]
-		    } ( $e, shift(@e) );
+		    } ( [@$this_event], [@$next_event] );
 		    push(@hi, $a[0]);
 		    push(@md, $a[1]);
-		    push(@lo, [@{$a[1]}]);
+		    push(@lo, $a[1]);
 		}
 		$hi[-1]->[EV_TIME] = $time;
 		$md[-1]->[EV_TIME] = $time;
@@ -829,16 +876,16 @@ sub MIDI::Track::split_hml {
 	    }
 	    else {
 		# Not a multi-note, copy.
-		push(@hi, $e);
-		push(@md, [@$e]);
-		push(@lo, [@$e]);
+		push(@hi, [@$this_event]);
+		push(@md, [@$this_event]);
+		push(@lo, [@$this_event]);
 	    }
 	}
 	else {
 	    # Not a note, copy.
-	    push(@hi, $e);
-	    push(@md, [@$e]);
-	    push(@lo, [@$e]);
+	    push(@hi, [@$this_event]);
+	    push(@md, [@$this_event]);
+	    push(@lo, [@$this_event]);
 	}
     }
 
