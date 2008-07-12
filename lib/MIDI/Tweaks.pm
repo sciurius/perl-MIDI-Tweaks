@@ -286,6 +286,24 @@ sub time2delta {
     }
 }
 
+=head2 MIDI::Tweaks::Opus::change_pitch
+
+Method. One argument, the options hash.
+
+Modifies the pitch of the Opus.
+
+This method just calls MIDI::Track::change_pitch on all tracks.
+See L<MIDI::Track::change_pitch> for details.
+
+=cut
+
+sub change_pitch {
+    my $self = shift;
+    foreach my $track ( $self->tracks ) {
+	$track->change_pitch(@_);
+    }
+}
+
 =head2 MIDI::Tweaks::Opus::change_tempo
 
 Method. One argument, the options hash.
@@ -505,6 +523,65 @@ sub MIDI::Track::mapper {
     }
 
     $track;
+}
+
+=head2 MIDI::Track::change_pitch
+
+Method. One argument, the options hash.
+
+Changes the pitch of each 'note on' event according to the options.
+
+The options has must contain C<< int => number >>. The number
+indicates the number of half-tones the pitch should be raised. A
+negative number will lower the pitch.
+Any remaining options are passed to the mapper function.
+
+Note that key signatures will be changed as well.
+
+=cut
+
+sub MIDI::Track::change_pitch {
+    my ($track, $args) = @_;
+    croak("MIDI::Track::change_pitch requires a HASH argument")
+      unless ref($args) eq 'HASH';
+    $args = {%$args};
+
+    my $mapper_func;
+    #         C   Db  D   Es  E   F   Gb  G   As  A   Bb  B
+    my @k = ( 0, -5,  2, -3,  4, -1, -6,  1, -4,  3, -2,  5);
+    my %k; $k{$k[$_]} = $_ for 0 .. $#k;
+
+    if ( $args->{int} ) {
+	my $value = int(delete $args->{int});
+
+	$mapper_func = sub {
+	    if ( MIDI::Tweaks::is_note_event($_[0]) ) {
+		$_[0]->[EV_NOTE_PITCH] += $value;
+		croak("MIDI::Track::change_pitch: transposed pitch out of range")
+		  unless $_[0]->[EV_NOTE_PITCH] >= 0 && $_[0]->[EV_NOTE_PITCH] <= 127;
+		return;
+	    }
+	    if ( $_[0]->[0] eq 'key_signature' ) {
+		# Warning: ugly code ahead.
+		# This is expected to be run only a few times.
+		# Don't spent much effort on elegance and optimizing.
+		my $f = $_[0]->[2];	 # current #sharps
+		$f -= 12 if $f >= 6;	 # normalize
+		$f += 12 if $f < -6;
+		$f = $k{$f};		 # get note
+		$f += $value;		 # transpose
+		$f -= 12 while $f >= 12; # normalize
+		$f += 12 while $f < 0;
+		$_[0]->[2] = $k[$f];	 # get #sharps
+		return;
+	    }
+	};
+    }
+
+    croak("MIDI::Track::change_pitch: Missing 'value' or 'ratio' option")
+      unless $mapper_func;
+
+    $track->mapper($args, $mapper_func);
 }
 
 =head2 MIDI::Track::change_velocity

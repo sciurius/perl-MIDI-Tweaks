@@ -2,6 +2,8 @@ Revision history for MIDI-Tweaks
 
 0.04    Date/time
 	Add MIDI::Tweaks::Opus::change_tempo.
+	Add MIDI::Tweaks::Opus::change_pitch.
+	Add MIDI::Track::change_pitch.
 	Improve program logic and docs.
 
 0.03    2008-07-02 14:21
