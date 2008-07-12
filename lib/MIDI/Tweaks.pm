@@ -9,7 +9,7 @@ MIDI::Tweaks - Enhancements to MIDI.pm.
 
 =cut
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 use MIDI;
 use Carp;
@@ -46,6 +46,10 @@ MIDI module.
     # Reset all volume controls.
     $_->change_volume({ value => 100 }) foreach $op->tracks;
 
+    # Slowdown a bit.
+    $op->change_tempo({ ratio => 0.9 });
+
+    # Prepare the individual tracks.
     my $track0  = $op->tracks_r->[0];
     my $acc	= $op->tracks_r->[1]->change_velocity({ value =>  30 });
     my $solo    = $op->tracks_r->[2]->change_velocity({ value => 110 });
@@ -282,6 +286,26 @@ sub time2delta {
     }
 }
 
+=head2 MIDI::Tweaks::Opus::change_tempo
+
+Method. One argument, the options hash.
+
+Modifies the tempo settings of the Opus.
+
+The options has must contain either C<< value => number >> or C<<
+ratio => number >>. In the first case, the tempo is set to the
+specified value (beats per minute). In the second case, the tempo is
+changed according to the ratio.
+
+=cut
+
+sub change_tempo {
+    my $self = shift;
+    foreach my $track ( $self->tracks ) {
+	$track->change_tempo(@_);
+    }
+}
+
 # We need to override MIDI::Opus::dump for this to work...
 
 no warnings qw(redefine once);
@@ -468,7 +492,7 @@ sub MIDI::Track::mapper {
     my $track = shift;
 
     my $opts = {};
-    $opts = shift if ref($_[0]) eq 'HASH';
+    $opts = {%{shift()}} if ref($_[0]) eq 'HASH';
 
     my $mapper = shift;
     croak("MIDI::Track::mapper requires a CODE argument")
@@ -509,6 +533,7 @@ sub MIDI::Track::change_velocity {
     my ($track, $args) = @_;
     croak("MIDI::Track::change_velocity requires a HASH argument")
       unless ref($args) eq 'HASH';
+    $args = {%$args};
 
     my $mapper_func;
 
@@ -537,6 +562,53 @@ sub MIDI::Track::change_velocity {
     $track->mapper($args, $mapper_func);
 }
 
+=head2 MIDI::Track::change_tempo
+
+Method. One argument, the options hash.
+
+Changes the tempo of a trackaccording to the options.
+
+The options has must contain either C<< value => number >> or C<<
+ratio => number >>. In the first case, each occurence of a tempo event
+is changed to the specified value. In the second case, the tempo is
+changed according to the ratio.
+
+Any remaining options are passed to the mapper function.
+
+Note that usually track 0 controls the tempi for an opus.
+
+=cut
+
+sub MIDI::Track::change_tempo {
+    my ($track, $args) = @_;
+    croak("MIDI::Track::change_tempo requires a HASH argument")
+      unless ref($args) eq 'HASH';
+    $args = {%$args};
+
+    my $mapper_func;
+
+    if ( $args->{value} ) {
+	my $value = int(60000000 / int(delete $args->{value}));
+
+	$mapper_func = sub {
+	    return unless $_[0]->[0] eq 'set_tempo';
+	    $_[0]->[2] = $value;
+	};
+    }
+    elsif ( $args->{ratio} ) {
+	my $ratio = delete $args->{ratio};
+	$mapper_func = sub {
+	    return unless $_[0]->[0] eq 'set_tempo';
+	    $_[0]->[2] = int($_[0]->[2] / $ratio);
+	};
+    }
+
+    croak("MIDI::Track::change_tempo: Missing 'value' or 'ratio' option")
+      unless $mapper_func;
+
+    $track->mapper($args, $mapper_func);
+}
+
 =head2 MIDI::Track::change_volume
 
 Method. One argument, the options hash.
@@ -556,6 +628,7 @@ sub MIDI::Track::change_volume {
     my ($track, $args) = @_;
     croak("MIDI::Track::change_volume requires a HASH argument")
       unless ref($args) eq 'HASH';
+    $args = {%$args};
 
     my $mapper_func;
 
@@ -615,6 +688,7 @@ sub MIDI::Track::split_pitch {
     $args ||= {};
     croak("MIDI::Track::split_pitch requires a HASH argument")
       unless ref($args) eq 'HASH';
+    $args = {%$args};
 
     my $split ||= 56;
 
@@ -664,7 +738,7 @@ sub MIDI::Track::split_pitch {
 
 =head2 MIDI::Track::split_hilo
 
-Method. One argument, the options hash.
+Method. No arguments.
 
 The track is split into two tracks, high and low.
 
@@ -757,7 +831,7 @@ sub MIDI::Track::split_hilo {
 
 =head2 MIDI::Track::split_hml
 
-Method. One argument, the options hash.
+Method. No arguments.
 
 The track is split into three tracks, high, middle and low.
 

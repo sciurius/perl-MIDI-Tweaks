@@ -1,6 +1,10 @@
 Revision history for MIDI-Tweaks
 
-0.03    Date/time
+0.04    Date/time
+	Add MIDI::Tweaks::Opus::change_tempo.
+	Improve program logic and docs.
+
+0.03    2008-07-02 14:21
 	Improve program logic and docs.
 	Make less obfuscated by using better variable names.
 
