@@ -1,9 +1,11 @@
-.cvsignore
 Build.PL
 Changes
 lib/MIDI/Tweaks.pm
+Makefile.PL
 MANIFEST
+META.yml
 README
+script/midi-tweak
 t/00-load.t
 t/01-trivial.t
 t/02-trivial.t
@@ -14,6 +16,10 @@ t/11-noteevent.t
 t/20-velocity.t
 t/21-velocity.t
 t/22-volume.t
+t/23-tempo.t
+t/24-tempo.t
+t/25-pitch.t
+t/26-pitch.t
 t/30-splitpitch.t
 t/40-splithilo.t
 t/41-splithilo.t
@@ -24,5 +30,3 @@ t/52-splithml.t
 t/90-complex.mid
 t/90-complex.t
 t/tools.pl
-Makefile.PL
-META.yml

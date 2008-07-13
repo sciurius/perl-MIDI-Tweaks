@@ -1,10 +1,17 @@
 Revision history for MIDI-Tweaks
 
-0.04    Date/time
+0.05    date/time
+
+0.04    2008-07-13 16:43
+	Add MIDI::Tweaks::is_channel_event.
 	Add MIDI::Tweaks::Opus::change_tempo.
 	Add MIDI::Tweaks::Opus::change_pitch.
 	Add MIDI::Track::change_pitch.
+	Add MIDI::Track::channel.
+	Replace write_to_file with write_to_handle.
+	Report track numbers and channels starting with one, not zero.
 	Improve program logic and docs.
+	Provide usefull tool, midi-tweak.
 
 0.03    2008-07-02 14:21
 	Improve program logic and docs.
