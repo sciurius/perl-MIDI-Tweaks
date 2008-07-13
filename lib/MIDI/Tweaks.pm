@@ -25,6 +25,9 @@ use constant EV_NOTE_VELO    => 4;
 # These if for track_name events.
 use constant EV_MARKER_NAME  => 2;
 
+# Drum channel
+use constant MIDI_CHAN_PERCUSSION => 10;
+
 use base qw(Exporter);
 
 our @EXPORT;
@@ -32,7 +35,7 @@ our @EXPORT_OK;
 
 BEGIN {
     @EXPORT = qw(EV_TYPE EV_TIME EV_CHAN EV_NOTE_PITCH EV_NOTE_VELO EV_MARKER_NAME);
-    @EXPORT_OK = qw(is_note_event is_note_on is_note_off);
+    @EXPORT_OK = qw(is_note_event is_note_on is_note_off is_channel_event);
 }
 
 =head1 SYNOPSIS
@@ -137,6 +140,31 @@ sub is_note_off {
       || $e->[EV_TYPE] eq 'note_on' && !$e->[EV_NOTE_VELO];
 }
 
+=head2 MIDI::Tweaks::is_channel_event
+
+Function. Takes an event (array reference) as argument.
+Returns true if the event aqpplies to specific channel.
+
+=cut
+
+my $evpat;
+INIT {
+    $evpat = qr/^
+		  note_off
+		| note_on
+		| key_after_touch
+		| control_change
+		| patch_change
+		| channel_after_touch
+		| pitch_wheel_change
+		$/x;
+}
+
+sub is_channel_event {
+    my ($e) = shift;
+    $e->[EV_TYPE] =~ $evpat;
+}
+
 =head1 OPUS METHODS
 
 =cut
@@ -164,17 +192,19 @@ sub new {
     return $op;
 }
 
-=head2 MIDI::Tweaks::Opus::write_to_file
+=head2 MIDI::Tweaks::Opus::write_to_handle
 
 Method. Copies the Opus, converts the time stamps to delta times and
-passes the result to MIDI::Opus::write_to_file.
+passes the result to MIDI::Opus::write_to_handle.
+
+Note that this method is used internally by write_to_file.
 
 =cut
 
-sub write_to_file {
+sub write_to_handle {
     my $op = shift->copy;
     $op->time2delta;
-    $op->SUPER::write_to_file(@_);
+    $op->SUPER::write_to_handle(@_);
 }
 
 =head2 MIDI::Tweaks::Opus::dump
@@ -209,27 +239,32 @@ sub check_sanity {
 	$allow_fail = delete $args->{fail};
     }
 
-    my $evpat = qr/^note_off|note_on|key_after_touch|control_change|patch_change|channel_after_touch|pitch_wheel_change$/;
-
     my @channel_seen;
     my $fail;
-    my $tn = 0;
+    my $tn = 1;
     my $ev = 0;
     foreach my $track ( $self->tracks ) {
 	my $chan;
 	foreach ( $track->events ) {
-	    next unless $_->[EV_TYPE] =~ $evpat;
+	    next unless MIDI::Tweaks::is_channel_event($_);
 	    $ev++;
 	    if ( defined $chan ) {
 		if ( $_->[EV_CHAN] != $chan ) {
-		    carp("Sanity failure: track $tn controls channels $chan and ", $_->[EV_CHAN]);
+		    carp("Sanity failure: track $tn controls channels ",
+			 $chan+1,
+			 " and ",
+			 $_->[EV_CHAN]+1);
 		    $fail++;
 		}
 	    }
 	    else {
 		$chan = $_->[EV_CHAN];
 		if ( $channel_seen[$chan] ) {
-		    carp("Sanity failure: channel $chan is controlled by tracks ", $channel_seen[$chan], " and $tn");
+		    carp("Sanity failure: channel ",
+			 $chan+1,
+			 " is controlled by tracks ",
+			 $channel_seen[$chan]+1,
+			 " and $tn");
 		    $fail++;
 		}
 		$channel_seen[$chan] = $tn;
@@ -292,14 +327,17 @@ Method. One argument, the options hash.
 
 Modifies the pitch of the Opus.
 
-This method just calls MIDI::Track::change_pitch on all tracks.
-See L<MIDI::Track::change_pitch> for details.
+This method just calls MIDI::Track::change_pitch on all tracks. See
+L<MIDI::Track::change_pitch> for details. It skips the track
+associated with channel 9 which is typically associated with
+percussion.
 
 =cut
 
 sub change_pitch {
     my $self = shift;
     foreach my $track ( $self->tracks ) {
+	next if $track->channel == MIDI::Tweaks::MIDI_CHAN_PERCUSSION; # skip drums
 	$track->change_pitch(@_);
     }
 }
@@ -398,6 +436,24 @@ sub MIDI::Track::name {
 	  if $e->[EV_TYPE] eq 'track_name';
     }
     return;
+}
+
+=head2 MIDI::Track::channel
+
+Method. Returns the channel controlled by this track.
+If none was found, returns zero.
+
+Note that channels are numbered from one, as per MIDI standard.
+
+=cut
+
+sub MIDI::Track::channel {
+    my $track = shift;
+    foreach my $e ( $track->events ) {
+	next unless MIDI::Tweaks::is_channel_event($e);
+	return $e->[EV_CHAN] + 1;
+    }
+    return 0;
 }
 
 =head2 MIDI::Track::delta2time
