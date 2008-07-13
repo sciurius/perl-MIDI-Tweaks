@@ -6,6 +6,7 @@ MANIFEST
 META.yml
 README
 script/midi-tweak
+script/midi-dump
 t/00-load.t
 t/01-trivial.t
 t/02-trivial.t

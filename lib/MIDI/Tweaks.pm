@@ -9,7 +9,7 @@ MIDI::Tweaks - Enhancements to MIDI.pm.
 
 =cut
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 use MIDI;
 use Carp;
@@ -69,6 +69,12 @@ MIDI module.
 
 Warning: This module is still under development. The interface to the
 methods may change when new features are added.
+
+Two scripts are provided when installing this module:
+
+  midi-tweak: applies some tweaks to MIDI files
+
+  midi-dump: dumps contents of a MIDI file in an understandable format
 
 =head1 CONSTANTS
 
@@ -1127,6 +1133,10 @@ rt.cpan.org>, or through the web interface at
 L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=MIDI-Tweaks>. I will
 be notified, and then you'll automatically be notified of progress on
 your bug as I make changes.
+
+=head1 SEE ALSO
+
+L<MIDI>, L<MIDI::Opus>, L<midi-dump>, L<midi-tweak>.
 
 =head1 SUPPORT
 
