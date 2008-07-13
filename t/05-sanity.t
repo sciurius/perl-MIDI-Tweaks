@@ -18,7 +18,7 @@ unlink(@cln);
 
 my $data;			# filled by INIT
 
-diag("Expect: Sanity failure: channel 0 is controlled by tracks 1 and 2 ...");
+diag("Expect: Sanity failure: channel 1 is controlled by tracks 2 and 3 ...");
 my $op = eval $data;
 # This will fail, since track 2 dups 1.
 if ( $@ =~ /^sanity check failed/i ) {

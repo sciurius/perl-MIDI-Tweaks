@@ -18,10 +18,10 @@ unlink(@cln);
 
 my $data;			# filled by INIT
 
-diag("Expect: Sanity failure: track 1 controls channels 0 and 7 ...");
-diag("Expect: Sanity failure: track 1 controls channels 0 and 7 ...");
+diag("Expect: Sanity failure: track 2 controls channels 1 and 8 ...");
+diag("Expect: Sanity failure: track 2 controls channels 1 and 8 ...");
 my $op = eval $data;
-# This will fail, since track 1 controls channels 0 and 7.
+# This will fail, since track 2 controls channels 1 and 8.
 if ( $@ =~ /^sanity check failed/i ) {
     pass("not sane");
 }
