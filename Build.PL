@@ -7,6 +7,7 @@ my $builder = Module::Build->new(
     license             => 'perl',
     dist_author         => 'Johan Vromans <jvromans@squirrel.nl>',
     dist_version_from   => 'lib/MIDI/Tweaks.pm',
+    script_files	=> 'script/midi-tweak',
     requires => {
         'MIDI' => '0.80',
     },
