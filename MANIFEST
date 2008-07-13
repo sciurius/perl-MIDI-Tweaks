@@ -5,8 +5,8 @@ Makefile.PL
 MANIFEST
 META.yml
 README
-script/midi-tweak
 script/midi-dump
+script/midi-tweak
 t/00-load.t
 t/01-trivial.t
 t/02-trivial.t
@@ -28,6 +28,10 @@ t/42-splithilo.t
 t/50-splithml.t
 t/51-splithml.t
 t/52-splithml.t
+t/80-dump.mid
+t/80-dump.out
+t/80-dump.ref
+t/80-dump.t
 t/90-complex.mid
 t/90-complex.t
 t/tools.pl
