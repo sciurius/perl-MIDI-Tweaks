@@ -4,15 +4,15 @@ my $RCS_Id = '$Id$ ';
 # Author          : Johan Vromans
 # Created On      : Wed Jun 11 16:02:35 2008
 # Last Modified By: Johan Vromans
-# Last Modified On: Sun Jul 13 23:07:36 2008
-# Update Count    : 234
+# Last Modified On: Sun Jul 27 18:20:41 2008
+# Update Count    : 284
 # Status          : Unknown, Use with caution!
 
 ################ Common stuff ################
 
 use strict;
 
-our $VERSION = "0.01";
+our $VERSION = "0.02";
 
 # Package name.
 my $my_package = 'Sciurix';
@@ -27,18 +27,13 @@ $my_version = $VERSION;
 use Getopt::Long 2.13;
 
 # Command line options.
+my $rgscale = 0;
 my $verbose = 0;		# verbose processing
 
 # Development options (not shown with -help).
 my $debug = 0;			# debugging
 my $trace = 0;			# trace (show process)
 my $test = 0;			# test mode.
-
-# Process command line options.
-app_options();
-
-# Post-processing.
-$trace |= ($debug || $test);
 
 ################ Presets ################
 
@@ -61,32 +56,41 @@ my @keys   = (split(/ /, "C G D A E B F# C# Cb Gb Db Ab Eb Bb F"));
 my @snotes = (split(/ /, "C C# D D# E F F# G G# A A# B"));
 my @fnotes = (split(/ /, "C Db D Eb E F Gb G Ab A Bb B"));
 my $notes = \@snotes;
+my $ticks;			# ticks per 1/4 note.
 
-my $op = new MIDI::Opus ({from_file => $ARGV[0]});
+unless ( caller() ) {
+    # Process command line options.
+    app_options();
 
-# delta = time (in ticks)
-# ticks = # ticks per quarter note.
-# time_signature nn dd cc bb
-# nn/dd -> numerator / 2log denomitator. 6/3 -> 6/2**3 -> 6/8.
-# cc = # MIDI clocks per metronome tick.
-# bb = the number of notated 32nd notes in a MIDI quarter note (24 MIDI clocks).
+    # Post-processing.
+    $trace |= ($debug || $test);
 
-my $ticks = $op->ticks;		# ticks per 1/4 note
+    midi_dump(new MIDI::Opus ({from_file => $ARGV[0]}));
 
-# Defaults time signature according to the MIDI spec.
-init_time_signature();
-set_time_signature(0, 4, 2, 24, 8);
+    # delta = time (in ticks)
+    # ticks = # ticks per quarter note.
+    # time_signature nn dd cc bb
+    # nn/dd -> numerator / 2log denomitator. 6/3 -> 6/2**3 -> 6/8.
+    # cc = # MIDI clocks per metronome tick.
+    # bb = the number of notated 32nd notes in a MIDI quarter note (24 MIDI clocks).
+}
 
-$op->dump({ dump_tracks => 1, flat => 0});
+sub midi_dump {
+    my ($op) = @_;
 
-=begin later
+    $ticks = $op->ticks;		# ticks per 1/4 note
+    $rgscale = 960/$ticks if $rgscale;
 
-my $im = $op->draw();
-open(OUT, ">xx.png"); binmode(OUT);
-print OUT $im->png;
-close(OUT);
+    # Defaults time signature according to the MIDI spec.
+    init_time_signature(1);
+    set_time_signature(0, 4, 2, 24, 8);
 
-=cut
+    $op->dump({ dump_tracks => 1, flat => 0});
+}
+
+sub midi_rgscale {
+    $rgscale = shift;
+}
 
 ################ Convenience routines ################
 
@@ -114,6 +118,7 @@ my $etime;			# cumulative event time
 
 sub MIDI::Event::dump {
     my @event = ref($_[0]) ? @{ $_[0] } : @_;
+    $event[1] *= $rgscale if $rgscale;
 
     my $t = "[" . MIDI::_dump_quote(@event) . "],";
     $etime += $event[EV_TIME];
@@ -122,8 +127,7 @@ sub MIDI::Event::dump {
     my $extra = "";
 
     if ( $event[EV_TYPE] eq 'time_signature' ) {
-	# See below.
-	# set_time_signature($etime, @event[2..5]);
+	set_time_signature($etime, @event[2..5]);
 	$extra = sprintf("Time = %d/%d, Click = %d, NoteQ = %d",
 			 $event[2], 2**($event[3]), $event[4], $event[5]);
     }
@@ -161,11 +165,6 @@ sub MIDI::Event::dump {
     $extra = "  ".$extra if $extra;
     printf("        %-40s  #%8d  %s%s\n",
 	   $t, $etime, scalar(rg_timestamp($etime)), $extra);
-
-    # Process this *after* printing the rg_timestamp.
-    if ( $event[EV_TYPE] eq 'time_signature' ) {
-	set_time_signature($etime, @event[2..5]);
-    }
 }
 
 # This is copied from MIDI::Track, with one change (see #JV comment).
@@ -213,8 +212,13 @@ sub MIDI::Opus::dump { # method; read-only
   }
 
   print "MIDI::Opus->new({\n",
-    "  'format' => ", &MIDI::_dump_quote($this->{'format'}), ",\n",
-    "  'ticks'  => ", &MIDI::_dump_quote($this->{'ticks'}), ",\n";
+    "  'format' => ", &MIDI::_dump_quote($this->{'format'}), ",\n";
+  if ( $rgscale ) {		# JV
+      print "  'ticks'  => 960,\t\t# was: ", &MIDI::_dump_quote($this->{'ticks'}), "\n";
+  }
+  else {
+      print "  'ticks'  => ", &MIDI::_dump_quote($this->{'ticks'}), ",\n";
+  }
 
   my @tracks = $this->tracks;
   if( $options_r->{'dump_tracks'} ) {
@@ -322,10 +326,12 @@ my @tsigs;			# track of time signatures
 my $csig;			# current time signature
 
 sub init_time_signature {
+    my $reset = shift;
     $lts_bar = 0;
     $lts_time = 0;
     $etime = 0;
     $csig = 0;
+    @tsigs = () if $reset;
 }
 
 sub check_time_signature {
@@ -335,21 +341,26 @@ sub check_time_signature {
 	return if $csig >= @tsigs;
 	my ($t, $nn, $dd, $cc, $bb) = @{$tsigs[$csig]};
 	return if $et < $t;
+	set_time_signature($t, $nn, $dd, $cc, $bb);
 	printf("%s#%8d  %s  Time = %d/%d, Click = %d, NoteQ = %d\n",
 	       " " x 50, $t,
 	       scalar(rg_timestamp($t)),
 	       $nn, 2**$dd, $cc, $bb) if $csig;
-	set_time_signature($t, $nn, $dd, $cc, $bb);
 	$csig++;
     }
+    return 1;
 }
 
 sub set_time_signature {
     my ($t, $nn, $dd, $cc, $bb) = @_;
 
     # Register where the time sig happened.
-    $lts_bar += (rg_duration($t-$lts_time))[0];
+    my @a = rg_duration($t-$lts_time);
+    # By definition, time sig implies a new bar.
+    $a[0]++ if $a[1] || $a[2] || $a[3];
+    $lts_bar += $a[0];
     $lts_time = $t;
+
     if ( $csig < @tsigs && $tsigs[$csig]->[0] == $t ) {
 	$tsigs[$csig] = [$t, $nn, $dd, $cc, $bb];
     }
@@ -360,14 +371,14 @@ sub set_time_signature {
 
     if ( $nn > 5 && $nn % 3 == 0 ) { # compound signature
 	$bpm = $nn / 3;
-	$tpm = ($nn / 2**$dd) * 4 * $ticks; # midi always ticks qn
+	$tpm = ($nn / 2**$dd) * 4 * ($rgscale ? 960 : $ticks); # midi always ticks qn
 	$bnd = $tpm / $bpm;
 	$frac = 3 * (64 / 2**$dd);
     }
     else {			# simple time signature
 	$bpm = $nn;
-	$bpm *= 2**($dd-2);
-	$tpm = $bpm * $ticks;
+	$bpm *= 2**($dd-2) * ($cc / 24);
+	$tpm = $bpm * ($rgscale ? 960 : $ticks) * ($cc / 24);
 	$bnd = $tpm / $bpm;
 	$frac = 64 / 2**$dd;
     }
@@ -421,6 +432,7 @@ sub app_options {
 
     if ( !GetOptions
 	 (
+	  'rgscale'	  => \$rgscale,
 	  'ident'	  => \$ident,
 	  'verbose'	  => \$verbose,
 	  'trace'	  => \$trace,
@@ -449,6 +461,9 @@ Usage: $0 [options] file
 EndOfUsage
     exit $exit if defined $exit && $exit != 0;
 }
+
+1;
+
 __END__
 
 =head1 NAME
@@ -461,6 +476,7 @@ midi-dump - Dump contents of MIDI files
 
 Options:
 
+   --rgscale		scale ticks to RoseGarden convention
    --ident		show identification
    --help		brief help message
    --verbose		verbose information
@@ -468,6 +484,11 @@ Options:
 =head1 OPTIONS
 
 =over 8
+
+=item B<--rgscale>
+
+RoseGarden always uses a tick unit of 960. When B<--rgscale> is used,
+all times are scaled to 960 tick units.
 
 =item B<--verbose>
 
