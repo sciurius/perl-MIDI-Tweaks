@@ -9,7 +9,7 @@ MIDI::Tweaks - Enhancements to MIDI.pm.
 
 =cut
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 use MIDI;
 use Carp;
@@ -240,7 +240,7 @@ sub check_sanity {
     my ($self, $args) = @_;
     $args ||= {};
 
-    my $allow_fail;
+    my $allow_fail = $MIDI::Tweaks::allow_sanity_fail;
     if ( $args->{fail} ) {
 	$allow_fail = delete $args->{fail};
     }
