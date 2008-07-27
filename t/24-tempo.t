@@ -32,9 +32,13 @@ $op->change_tempo({ ratio => 0.3 });
 # Dump it.
 $op->dump_to_file("$id.mid.dmp");
 
+# Slurp.
+my $dump = do { local $/; open(my $f, '<', "$id.mid.dmp"); <$f> };
+
 # Compare the dumps.
-if ( differ("$id.mid.dmp", "$id.out.dmp", 1) ) {
-    fail("compare");
+# if ( differ("$id.mid.dmp", "$id.out.dmp", 1) ) {
+if ( $dump ne $rslt ) {
+    is($dump, $rslt, "compare");
 }
 else {
     pass("compare");
