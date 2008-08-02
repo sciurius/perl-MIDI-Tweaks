@@ -54,7 +54,7 @@ MIDI::Opus->new({
       'events' => [  # 316 events.
         ['track_name', 0, 'Imported MIDI'],       #       0  001-01-00-00
         ['patch_change', 0, 0, 0],                #       0  001-01-00-00  Channel 1, patch = Acoustic Grand
-        ['control_change', 0, 0, 7, 74],          #       0  001-01-00-00  Volume = 74
+        ['control_change', 0, 0, 7, 74],          #       0  001-01-00-00  Main Volume = 74
         ['control_change', 0, 0, 10, 64],         #       0  001-01-00-00  Pan = 64
         ['note_on', 0, 0, 83, 80],                #       0  001-01-00-00  On:  B4
         ['note_off', 192, 0, 83, 127],            #     192  001-01-06-24  Off: B4

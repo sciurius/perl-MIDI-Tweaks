@@ -19,7 +19,7 @@ MIDI::Opus->new({
                                                   #       0  001-01-00-00  Time = 2/8, Click = 12, NoteQ = 8
         ['track_name', 0, ''],                    #       0  001-01-00-00
         ['patch_change', 0, 0, 0],                #       0  001-01-00-00  Channel 1, patch = Acoustic Grand
-        ['control_change', 0, 0, 7, 100],         #       0  001-01-00-00  Volume = 100
+        ['control_change', 0, 0, 7, 100],         #       0  001-01-00-00  Main Volume = 100
         ['control_change', 0, 0, 10, 64],         #       0  001-01-00-00  Pan = 64
         ['note_on', 0, 0, 60, 100],               #       0  001-01-00-00  On:  C3
         ['note_off', 240, 0, 60, 127],            #     240  001-02-00-00  Off: C3
