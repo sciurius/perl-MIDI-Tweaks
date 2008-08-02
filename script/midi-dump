@@ -4,8 +4,8 @@ my $RCS_Id = '$Id$ ';
 # Author          : Johan Vromans
 # Created On      : Wed Jun 11 16:02:35 2008
 # Last Modified By: Johan Vromans
-# Last Modified On: Sun Jul 27 18:20:41 2008
-# Update Count    : 284
+# Last Modified On: Sat Aug  2 17:34:01 2008
+# Update Count    : 296
 # Status          : Unknown, Use with caution!
 
 ################ Common stuff ################
@@ -139,7 +139,10 @@ sub MIDI::Event::dump {
     }
 
     elsif ( $event[EV_TYPE] eq 'set_tempo' ) {
-	$extra = sprintf("Tempo: q = %d", int(60000000 / $event[2]));
+	# Number of microseconds per quarter note.
+	my $qpm = sprintf("%.2f", 60000000 / $event[2]);
+	$qpm =~ s/[,.]00$//;
+	$extra = "Tempo: q = " . $qpm;
     }
 
     elsif ( $event[EV_TYPE] eq 'patch_change' ) {
@@ -148,11 +151,9 @@ sub MIDI::Event::dump {
     }
 
     elsif ( $event[EV_TYPE] eq 'control_change' ) {
-	if ( $event[3] == 7 ) {
-	    $extra = sprintf("Volume = %s", $event[4]);
-	}
-	elsif ( $event[3] == 10 ) {
-	    $extra = sprintf("Pan = %s", $event[4]);
+	if ( defined $MIDI::controllers[$event[3]] ) {
+	    $extra = $MIDI::controllers[$event[3]] . ' = '
+	      . $event[4];
 	}
     }
 
@@ -464,8 +465,6 @@ EndOfUsage
 
 1;
 
-__END__
-
 =head1 NAME
 
 midi-dump - Dump contents of MIDI files
@@ -586,3 +585,55 @@ Public License as published by the Free Software Foundation; either
 version 2 of the License, or (at your option) any later version.
 
 =cut
+
+INIT {
+    $MIDI::controllers[  0] = "Bank Select";
+    $MIDI::controllers[  1] = "Modulation";
+    $MIDI::controllers[  2] = "Breath Controller";
+
+    $MIDI::controllers[  4] = "Foot Controller";
+    $MIDI::controllers[  5] = "Portamento Time";
+    $MIDI::controllers[  6] = "Data Entry (MSB)";
+    $MIDI::controllers[  7] = "Main Volume";
+    $MIDI::controllers[  8] = "Balance";
+
+    $MIDI::controllers[ 10] = "Pan";
+    $MIDI::controllers[ 11] = "Expression Controller";
+    $MIDI::controllers[ 12] = "Effect Control 1";
+    $MIDI::controllers[ 13] = "Effect Control 2";
+
+    $MIDI::controllers[ 15+$_ ] = "General-Purpose Controller $_" for 1..4;
+
+    $MIDI::controllers[ 32+$_ ] = "LSB for controller $_" for 0 .. 31;
+
+    $MIDI::controllers[ 64] = "Damper pedal (sustain)";
+    $MIDI::controllers[ 65] = "Portamento";
+    $MIDI::controllers[ 66] = "Sostenuto";
+    $MIDI::controllers[ 67] = "Soft Pedal";
+    $MIDI::controllers[ 68] = "Legato Footswitch";
+    $MIDI::controllers[ 69] = "Hold 2";
+    $MIDI::controllers[ 70] = "Sound Controller 1 (default: Timber Variation)";
+    $MIDI::controllers[ 71] = "Sound Controller 2 (default: Timber/Harmonic Content)";
+    $MIDI::controllers[ 72] = "Sound Controller 3 (default: Release Time)";
+    $MIDI::controllers[ 73] = "Sound Controller 4 (default: Attack Time)";
+
+    $MIDI::controllers[ 68+$_ ] = "Sound Controller $_" for 6 .. 10;
+
+    $MIDI::controllers[ 75+$_ ] = "General-Purpose Controller $_" for 5 .. 8;
+
+    $MIDI::controllers[ 84] = "Portamento Control";
+
+    $MIDI::controllers[ 91] = "Effects 1 Depth (formerly External Effects Depth)";
+    $MIDI::controllers[ 92] = "Effects 2 Depth (formerly Tremolo Depth)";
+    $MIDI::controllers[ 93] = "Effects 3 Depth (formerly Chorus Depth)";
+    $MIDI::controllers[ 94] = "Effects 4 Depth (formerly Celeste Detune)";
+    $MIDI::controllers[ 95] = "Effects 5 Depth (formerly Phaser Depth)";
+    $MIDI::controllers[ 96] = "Data Increment";
+    $MIDI::controllers[ 97] = "Data Decrement";
+    $MIDI::controllers[ 98] = "Non-Registered Parameter Number (LSB)";
+    $MIDI::controllers[ 99] = "Non-Registered Parameter Number (MSB)";
+    $MIDI::controllers[100] = "Registered Parameter Number (LSB)";
+    $MIDI::controllers[101] = "Registered Parameter Number (MSB)";
+
+    $MIDI::controllers[120+$_] = "Mode Message $_" for 1 .. 7;
+}
