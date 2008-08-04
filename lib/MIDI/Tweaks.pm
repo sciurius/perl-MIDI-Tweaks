@@ -9,7 +9,7 @@ MIDI::Tweaks - Enhancements to MIDI.pm.
 
 =cut
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 use MIDI;
 use Carp;
