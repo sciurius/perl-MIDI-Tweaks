@@ -1,6 +1,14 @@
 Revision history for MIDI-Tweaks
 
-0.06    date/time
+0.08	 date/time
+
+0.07    2008-08-04 22:27
+	sanity: Detect double and open notes.
+	midi-dump: Use more controller names.
+	Use float number for non-int tempo.
+
+0.06    2008-07-27 22:58
+	midi-dump: Many tests for different sigs and changes.
 
 0.05    2008-07-13 23:23
 	Add midi-dump utility.
