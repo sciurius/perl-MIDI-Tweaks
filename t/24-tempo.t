@@ -27,7 +27,7 @@ my $op = eval $data;
 ok($op, "load from DATA");
 
 # Change tempo with a ratio.
-$op->change_tempo({ ratio => 0.3 });
+$op->change_tempo({ ratio => 0.4 });
 
 # Dump it.
 $op->dump_to_file("$id.mid.dmp");
@@ -121,8 +121,8 @@ MIDI::Tweaks::Opus->new({
       'events' => [  # 5 events.
         ['time_signature', 0, 4, 2, 24, 8],
         ['key_signature', 0, 0, 0],
-        ['set_tempo', 0, 2000000],
-        ['set_tempo', 0, 2000000],
+        ['set_tempo', 0, 1500000],
+        ['set_tempo', 0, 1500000],
         ['text_event', 1, ''],
       ]
     }),
@@ -135,7 +135,7 @@ MIDI::Tweaks::Opus->new({
         ['control_change', 0, 0, 32, 0],
         ['control_change', 0, 0, 7, 100],
         ['patch_change', 0, 0, 52],
-        ['set_tempo', 0, 2000000],
+        ['set_tempo', 0, 1500000],
         ['lyric', 128, '1.If '],
         ['note_on', 0, 0, 70, 68],
         ['note_on', 128, 0, 70, 0],
