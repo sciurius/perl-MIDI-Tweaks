@@ -9,7 +9,7 @@ MIDI::Tweaks - Enhancements to MIDI.pm.
 
 =cut
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 use MIDI;
 use Carp;
@@ -188,13 +188,27 @@ use Carp;
 Method. Does whatever MIDI::Opus::new does, but checks for sanity and
 produces an Opus with absolute time stamps.
 
+The options hash may contain a key C<require_sanity> that controls the
+level of sanity checking:
+
+  0:    no checking
+  1:    normal checking
+  warn: normal checking, but warn instead of die
+
 =cut
 
 sub new {
     my $pkg = shift;
-    my $op = $pkg->SUPER::new(@_);
-    $op->check_sanity;
+
+    my $args = $_[0] ? { %{$_[0]} } : {};
+    my $require_sanity = delete($args->{require_sanity});
+    $require_sanity = 1 unless defined $require_sanity;
+
+    my $op = $pkg->SUPER::new($args);
+
     $op->delta2time;
+    $op->check_sanity({ strict => $require_sanity }) if $require_sanity;
+
     return $op;
 }
 
@@ -240,20 +254,19 @@ sub check_sanity {
     my ($self, $args) = @_;
     $args ||= {};
 
-    my $allow_fail = $MIDI::Tweaks::allow_sanity_fail;
-    if ( $args->{fail} ) {
-	$allow_fail = delete $args->{fail};
+    my $strict = 1;
+    if ( $args->{strict} ) {
+	$strict = delete $args->{strict};	# 1, or 'warn'
     }
 
     my @channel_seen;
     my $fail;
     my $tn = 1;
-    my $ev = 0;
     foreach my $track ( $self->tracks ) {
 	my $chan;
+	my $noteon;
 	foreach ( $track->events ) {
 	    next unless MIDI::Tweaks::is_channel_event($_);
-	    $ev++;
 	    if ( defined $chan ) {
 		if ( $_->[EV_CHAN] != $chan ) {
 		    carp("Sanity failure: track $tn controls channels ",
@@ -269,17 +282,42 @@ sub check_sanity {
 		    carp("Sanity failure: channel ",
 			 $chan+1,
 			 " is controlled by tracks ",
-			 $channel_seen[$chan]+1,
+			 $channel_seen[$chan],
 			 " and $tn");
 		    $fail++;
 		}
 		$channel_seen[$chan] = $tn;
 	    }
+	    if ( MIDI::Tweaks::is_note_on($_) ) {
+		if ( defined $noteon->[$_->[EV_NOTE_PITCH]] ) {
+		    carp("Sanity warning: track $tn, time $_->[EV_TIME], "
+			 . "note $_->[EV_NOTE_PITCH] already on (since "
+			 . $noteon->[$_->[EV_NOTE_PITCH]] . ")");
+		}
+		else {
+		    $noteon->[$_->[EV_NOTE_PITCH]] = $_->[EV_TIME];
+		}
+	    }
+	    elsif ( MIDI::Tweaks::is_note_off($_) ) {
+		if ( defined $noteon->[$_->[EV_NOTE_PITCH]] ) {
+		    $noteon->[$_->[EV_NOTE_PITCH]] = undef;
+		}
+		else {
+		    carp("Sanity warning: track $tn, time $_->[EV_TIME], "
+			 . "note $_->[EV_NOTE_PITCH] not on");
+		}
+	    }
+	}
+	foreach my $i ( 0 .. $#{$noteon} ) {
+	    next unless defined $noteon->[$i];
+	    carp("Sanity failure: track $tn, "
+			 . "unfinished note $i (on since $noteon->[$i])");
+	    $fail++;
 	}
 	$tn++;
     }
     if ( $fail ) {
-	return if $allow_fail;
+	return if $strict eq 'warn';
 	croak("Sanity check failed");
     }
     return 1;
