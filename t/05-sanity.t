@@ -6,7 +6,7 @@ my $id = "05-sanity";
 
 use strict;
 use warnings;
-use Test::More tests => 1;
+use Test::More tests => 3;
 use MIDI::Tweaks;
 -d "t" && chdir "t";
 require "tools.pl";
@@ -18,15 +18,29 @@ unlink(@cln);
 
 my $data;			# filled by INIT
 
-diag("Expect: Sanity failure: channel 1 is controlled by tracks 2 and 3 ...");
-my $op = eval $data;
-# This will fail, since track 2 dups 1.
-if ( $@ =~ /^sanity check failed/i ) {
-    pass("not sane");
+my @msgs;
+my @exps =
+  ("Sanity failure: channel 1 is controlled by tracks 2 and 3",
+  );
+
+{ local $SIG{__WARN__} = sub { push(@msgs, join("", @_)) };
+  my $op = eval $data;
+  # This will fail, since track 2 dups 1.
+  if ( $@ =~ /^sanity check failed/i ) {
+      pass("not sane");
+  }
+  else {
+      diag($@) if $@;
+      fail("not sane");
+  }
 }
-else {
-    diag($@) if $@;
-    fail("not sane");
+
+is(scalar(@msgs), scalar(@exps), "warnings == as expected");
+my $i = 1;
+foreach ( @msgs ) {
+    $_ = substr($_, 0, length($exps[0]));
+    is($_, shift(@exps), "msg-$i");
+    $i++;
 }
 
 ################################################################
