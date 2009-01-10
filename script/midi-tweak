@@ -4,8 +4,8 @@ my $RCS_Id = '$Id$ ';
 # Author          : Johan Vromans
 # Created On      : Sun Jul 13 14:37:55 2008
 # Last Modified By: Johan Vromans
-# Last Modified On: Sun Jul 13 16:33:22 2008
-# Update Count    : 49
+# Last Modified On: Sat Jan 10 20:22:28 2009
+# Update Count    : 52
 # Status          : Unknown, Use with caution!
 
 ################ Common stuff ################
@@ -111,8 +111,10 @@ sub change_velocity {
       if ( defined($value) + defined($ratio) != 1 )
 	 || defined($int);
 
-    $_[0]->change_velocity({ value => $value }) if defined $value;
-    $_[0]->change_velocity({ ratio => $ratio }) if defined $ratio;
+    foreach ( $_[0]->tracks ) {
+	$_->change_velocity({ value => $value }) if defined $value;
+	$_->change_velocity({ ratio => $ratio }) if defined $ratio;
+    }
 }
 
 sub change_volume {
@@ -120,8 +122,10 @@ sub change_volume {
       if ( defined($value) + defined($ratio) != 1 )
 	 || defined($int);
 
-    $_[0]->change_volume({ value => $value }) if defined $value;
-    $_[0]->change_volume({ ratio => $ratio }) if defined $ratio;
+    foreach ( $_[0]->tracks ) {
+	$_->change_volume({ value => $value }) if defined $value;
+	$_->change_volume({ ratio => $ratio }) if defined $ratio;
+    }
 }
 
 ################ Subroutines ################
