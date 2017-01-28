@@ -4,8 +4,8 @@ my $RCS_Id = '$Id$ ';
 # Author          : Johan Vromans
 # Created On      : Wed Jun 11 16:02:35 2008
 # Last Modified By: Johan Vromans
-# Last Modified On: Sat Aug  2 17:34:01 2008
-# Update Count    : 296
+# Last Modified On: Sat Jan 28 11:20:47 2017
+# Update Count    : 297
 # Status          : Unknown, Use with caution!
 
 ################ Common stuff ################
@@ -133,7 +133,7 @@ sub MIDI::Event::dump {
     }
 
     elsif ( $event[EV_TYPE] eq 'key_signature' ) {
-	$extra = sprintf("Key = %s",
+	$extra = sprintf("Key = %s%s",
 			 $keys[$event[2]], $event[3] eq 'minor' ? "m" : "");
 	$notes = $event[2] < 0 ? \@fnotes : \@snotes;
     }
