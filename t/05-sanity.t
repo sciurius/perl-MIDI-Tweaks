@@ -9,7 +9,7 @@ use warnings;
 use Test::More tests => 3;
 use MIDI::Tweaks;
 -d "t" && chdir "t";
-require "tools.pl";
+require "./tools.pl";
 
 my @cln = map { "$id.$_.dmp" } qw(mid out);
 
@@ -20,7 +20,7 @@ my $data;			# filled by INIT
 
 my @msgs;
 my @exps =
-  ("Sanity failure: channel 1 is controlled by tracks 2 and 3",
+  ("Sanity check: channel 1 is controlled by tracks 2 and 3",
   );
 
 { local $SIG{__WARN__} = sub { push(@msgs, join("", @_)) };

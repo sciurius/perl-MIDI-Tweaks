@@ -9,7 +9,7 @@ use warnings;
 use Test::More tests => 8;
 use MIDI::Tweaks;
 -d "t" && chdir "t";
-require "tools.pl";
+require "./tools.pl";
 
 my @cln = ( "$id.mid.dmp", "$id.out.dmp");
 

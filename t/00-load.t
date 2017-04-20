@@ -9,6 +9,6 @@ BEGIN {
 }
 
 -d "t" && chdir "t";
-require_ok("tools.pl");
+require_ok("./tools.pl");
 
 diag( "Testing MIDI::Tweaks $MIDI::Tweaks::VERSION, Perl $], $^X" );

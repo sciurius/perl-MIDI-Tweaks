@@ -9,7 +9,7 @@ use warnings;
 use Test::More tests => 1;
 use File::Spec;
 -d "t" && chdir "t";
-require "tools.pl";
+require "./tools.pl";
 
 # Get platform-independent file names.
 my $dumper = File::Spec->catfile("../blib/script", "midi-dump");

@@ -1,3 +1,5 @@
+#! perl
+
 package MIDI::Tweaks;
 
 use warnings;
@@ -9,7 +11,7 @@ MIDI::Tweaks - Enhancements to MIDI.pm.
 
 =cut
 
-our $VERSION = '0.08';
+our $VERSION = '1.00';
 
 use MIDI;
 use Carp;
@@ -269,7 +271,7 @@ sub check_sanity {
 	    next unless MIDI::Tweaks::is_channel_event($_);
 	    if ( defined $chan ) {
 		if ( $_->[EV_CHAN] != $chan ) {
-		    carp("Sanity failure: track $tn controls channels ",
+		    carp("Sanity check: track $tn controls channels ",
 			 $chan+1,
 			 " and ",
 			 $_->[EV_CHAN]+1);
@@ -279,7 +281,7 @@ sub check_sanity {
 	    else {
 		$chan = $_->[EV_CHAN];
 		if ( $channel_seen[$chan] ) {
-		    carp("Sanity failure: channel ",
+		    carp("Sanity check: channel ",
 			 $chan+1,
 			 " is controlled by tracks ",
 			 $channel_seen[$chan],
@@ -310,8 +312,8 @@ sub check_sanity {
 	}
 	foreach my $i ( 0 .. $#{$noteon} ) {
 	    next unless defined $noteon->[$i];
-	    carp("Sanity failure: track $tn, "
-			 . "unfinished note $i (on since $noteon->[$i])");
+	    carp("Sanity check: track $tn, "
+		 . "unfinished note $i (on since $noteon->[$i])");
 	    $fail++;
 	}
 	$tn++;
@@ -1182,7 +1184,6 @@ You can find documentation for this module with the perldoc command.
 
     perldoc MIDI::Tweaks
 
-
 You can also look for information at:
 
 =over 4
@@ -1201,12 +1202,11 @@ L<http://search.cpan.org/dist/MIDI-Tweaks>
 
 =back
 
-
 =head1 ACKNOWLEDGEMENTS
 
 =head1 COPYRIGHT & LICENSE
 
-Copyright 2008 Johan Vromans, Squirrel Consultancy. All rights reserved.
+Copyright 2008,2017 Johan Vromans, Squirrel Consultancy. All rights reserved.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

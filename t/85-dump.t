@@ -16,7 +16,7 @@ my @dlist = ( 4, 8 );
 use Test::More;
 use File::Spec;
 -d "t" && chdir "t";
-require "tools.pl";
+require "./tools.pl";
 
 plan tests => scalar(@dlist)*scalar(@nlist) + INLINE;
 

@@ -1,28 +1,25 @@
 #!/usr/bin/perl -w
-my $RCS_Id = '$Id$ ';
+my $RCS_Id = '$Id: midi-tweak,v 1.3 2009/01/10 19:44:48 jv Exp $ ';
 
 # Author          : Johan Vromans
 # Created On      : Sun Jul 13 14:37:55 2008
 # Last Modified By: Johan Vromans
-# Last Modified On: Sat Jan 10 20:22:28 2009
-# Update Count    : 52
+# Last Modified On: Thu Apr 20 13:58:45 2017
+# Update Count    : 53
 # Status          : Unknown, Use with caution!
 
 ################ Common stuff ################
 
 use strict;
 
-# Package or program libraries, if appropriate.
-# $LIBDIR = $ENV{'LIBDIR'} || '/usr/local/lib/sample';
-# use lib qw($LIBDIR);
-# require 'common.pl';
+use MIDI::Tweaks ();
+
+our $VERSION = $MIDI::Tweaks::VERSION;
 
 # Package name.
 my $my_package = 'Sciurix';
 # Program name and version.
-my ($my_name, $my_version) = $RCS_Id =~ /: (.+),v ([\d.]+)/;
-# Tack '*' if it is not checked in into RCS.
-$my_version .= '*' if length('$Locker$ ') > 12;
+my $my_name = "midi-tweak";
 
 ################ Command line parameters ################
 
@@ -164,7 +161,7 @@ sub app_options {
 }
 
 sub app_ident {
-    print STDERR ("This is $my_package [$my_name $my_version]\n");
+    print STDERR ("This is $my_package [$my_name $VERSION]\n");
 }
 
 sub app_usage {

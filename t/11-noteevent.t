@@ -6,7 +6,7 @@ use Test::More tests => 9;
 use MIDI::Tweaks qw(is_note_event is_note_on is_note_off);
 
 # -d "t" && chdir "t";
-# require "tools.pl";
+# require "./tools.pl";
 
 ok(is_note_event(['note_on', 0, 0, 70, 77]), "noteev: note on");
 ok(is_note_event(['note_off', 128, 0, 70, 0]), "noteev: note off");

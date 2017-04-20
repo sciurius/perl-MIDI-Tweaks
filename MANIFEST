@@ -1,12 +1,12 @@
-Build.PL
 Changes
 lib/MIDI/Tweaks.pm
 Makefile.PL
 MANIFEST
 META.yml
 README
-script/midi-dump
-script/midi-tweak
+script/midi-dump.pl
+script/midi-tweak.pl
+script/pp.PL
 t/00-load.t
 t/01-trivial.t
 t/02-trivial.t

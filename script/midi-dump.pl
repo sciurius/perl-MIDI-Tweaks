@@ -1,26 +1,24 @@
 #!/usr/bin/perl -w
-my $RCS_Id = '$Id$ ';
 
 # Author          : Johan Vromans
 # Created On      : Wed Jun 11 16:02:35 2008
 # Last Modified By: Johan Vromans
-# Last Modified On: Sat Jan 28 11:20:47 2017
-# Update Count    : 297
+# Last Modified On: Thu Apr 20 13:57:58 2017
+# Update Count    : 298
 # Status          : Unknown, Use with caution!
 
 ################ Common stuff ################
 
 use strict;
 
-our $VERSION = "0.02";
+use MIDI::Tweaks ();
+
+our $VERSION = $MIDI::Tweaks::VERSION;
 
 # Package name.
 my $my_package = 'Sciurix';
 # Program name and version.
-my ($my_name, $my_version) = $RCS_Id =~ /: (.+),v ([\d.]+)/;
-# Tack '*' if it is not checked in into RCS.
-$my_version .= '*' if length('$Locker$ ') > 12;
-$my_version = $VERSION;
+my $my_name = "midi-dump";
 
 ################ Command line parameters ################
 
@@ -448,7 +446,7 @@ sub app_options {
 }
 
 sub app_ident {
-    print STDERR ("This is $my_package [$my_name $my_version]\n");
+    print STDERR ("This is $my_package [$my_name $VERSION]\n");
 }
 
 sub app_usage {

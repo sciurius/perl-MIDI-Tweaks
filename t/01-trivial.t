@@ -5,7 +5,7 @@ use warnings;
 use Test::More tests => 1;
 use MIDI::Tweaks;
 -d "t" && chdir "t";
-require "tools.pl";
+require "./tools.pl";
 
 # Actually, this is more a verification of MIDI functionality that
 # we're going to rely on.
