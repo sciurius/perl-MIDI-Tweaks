@@ -1,8 +1,7 @@
-Changes
+CHANGES
 lib/MIDI/Tweaks.pm
 Makefile.PL
 MANIFEST
-META.yml
 README
 script/midi-dump.pl
 script/midi-tweak.pl

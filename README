@@ -21,10 +21,9 @@ INSTALLATION
 
 To install this module, run the following commands:
 
-	perl Build.PL
-	./Build
-	./Build test
-	./Build install
+	perl Makefile.PL
+	make all test
+	make install
 
 SUPPORT AND DOCUMENTATION
 
@@ -44,10 +43,9 @@ You can also look for information at:
     Search CPAN
         http://search.cpan.org/dist/MIDI-Tweaks
 
-
 COPYRIGHT AND LICENCE
 
-Copyright (C) 2008 Johan Vromans, Squirrel Consultancy
+Copyright (C) 2008,2017 Johan Vromans, Squirrel Consultancy
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
