@@ -32,16 +32,9 @@ perldoc command.
 
     perldoc MIDI::Tweaks
 
-You can also look for information at:
-
-    RT, CPAN's request tracker
-        http://rt.cpan.org/NoAuth/Bugs.html?Dist=MIDI-Tweaks
-
-    CPAN Ratings
-        http://cpanratings.perl.org/d/MIDI-Tweaks
-
-    Search CPAN
-        http://search.cpan.org/dist/MIDI-Tweaks
+Development of this module is hosted on GitHub:
+https://github.com/sciurius/perl-MIDI-Tweaks. Feel free to fork and
+contribute.
 
 COPYRIGHT AND LICENCE
 

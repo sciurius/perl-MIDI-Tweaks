@@ -1184,23 +1184,9 @@ You can find documentation for this module with the perldoc command.
 
     perldoc MIDI::Tweaks
 
-You can also look for information at:
-
-=over 4
-
-=item * RT: CPAN's request tracker
-
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=MIDI-Tweaks>
-
-=item * CPAN Ratings
-
-L<http://cpanratings.perl.org/d/MIDI-Tweaks>
-
-=item * Search CPAN
-
-L<http://search.cpan.org/dist/MIDI-Tweaks>
-
-=back
+Development of this module is hosted on GitHub:
+L<https://github.com/sciurius/perl-MIDI-Tweaks>. Feel free to fork and
+contribute.
 
 =head1 ACKNOWLEDGEMENTS
 

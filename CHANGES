@@ -1,5 +1,9 @@
 Revision history for MIDI-Tweaks
 
+1.01	xxxxx
+
+	Move development to GitHub.
+
 1.00	2017-04-20
 
 	Revamp. Fix test failures for Perl 5.26+. 
