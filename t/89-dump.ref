@@ -26,15 +26,15 @@ MIDI::Opus->new({
         ['time_signature', 960, 5, 3, 12, 8],     #   29520  024-01-00-00  Time = 5/8, Click = 12, NoteQ = 8
         ['time_signature', 3600, 4, 3, 12, 8],    #   33120  027-01-00-00  Time = 4/8, Click = 12, NoteQ = 8
         ['time_signature', 960, 6, 3, 36, 8],     #   34080  028-01-00-00  Time = 6/8, Click = 36, NoteQ = 8
-        ['set_tempo', 5760, 357143],              #   39840  032-01-00-00  Tempo: q = 167
-        ['set_tempo', 20160, 361446],             #   60000  046-01-00-00  Tempo: q = 165
+        ['set_tempo', 5760, 357143],              #   39840  032-01-00-00  Tempo: q = 168
+        ['set_tempo', 20160, 361446],             #   60000  046-01-00-00  Tempo: q = 166
         ['time_signature', 0, 5, 3, 12, 8],       #   60000  046-01-00-00  Time = 5/8, Click = 12, NoteQ = 8
         ['time_signature', 3600, 4, 3, 12, 8],    #   63600  049-01-00-00  Time = 4/8, Click = 12, NoteQ = 8
         ['time_signature', 960, 6, 3, 36, 8],     #   64560  050-01-00-00  Time = 6/8, Click = 36, NoteQ = 8
         ['time_signature', 4320, 4, 3, 12, 8],    #   68880  053-01-00-00  Time = 4/8, Click = 12, NoteQ = 8
         ['time_signature', 960, 6, 3, 36, 8],     #   69840  054-01-00-00  Time = 6/8, Click = 36, NoteQ = 8
         ['set_tempo', 23040, 352941],             #   92880  070-01-00-00  Tempo: q = 170
-        ['set_tempo', 20160, 365854],             #  113040  084-01-00-00  Tempo: q = 163
+        ['set_tempo', 20160, 365854],             #  113040  084-01-00-00  Tempo: q = 164
         ['set_tempo', 48960, 370370],             #  162000  118-01-00-00  Tempo: q = 162
         ['time_signature', 0, 5, 3, 12, 8],       #  162000  118-01-00-00  Time = 5/8, Click = 12, NoteQ = 8
         ['time_signature', 3600, 4, 3, 12, 8],    #  165600  121-01-00-00  Time = 4/8, Click = 12, NoteQ = 8

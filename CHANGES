@@ -1,7 +1,8 @@
 Revision history for MIDI-Tweaks
 
-1.01	xxxxx
+1.01	2017-04-24
 
+	Fix test 89.
 	Move development to GitHub.
 
 1.00	2017-04-20

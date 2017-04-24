@@ -47,6 +47,7 @@ t/85-dump84.ref
 t/85-dump88.ref
 t/85-dump94.ref
 t/85-dump98.ref
+t/89-dump.mid
 t/89-dump.ref
 t/89-dump.t
 t/90-complex.mid

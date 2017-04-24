@@ -11,7 +11,7 @@ MIDI::Tweaks - Enhancements to MIDI.pm.
 
 =cut
 
-our $VERSION = '1.00';
+our $VERSION = '1.01';
 
 use MIDI;
 use Carp;

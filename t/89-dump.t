@@ -1,6 +1,6 @@
 #! perl
 
-my $id = "80-dump";
+my $id = "89-dump";
 
 # Test midi-dump
 
