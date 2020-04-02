@@ -3,8 +3,8 @@
 # Author          : Johan Vromans
 # Created On      : Wed Jun 11 16:02:35 2008
 # Last Modified By: Johan Vromans
-# Last Modified On: Thu Apr 20 13:57:58 2017
-# Update Count    : 298
+# Last Modified On: Thu Apr  2 09:32:46 2020
+# Update Count    : 303
 # Status          : Unknown, Use with caution!
 
 ################ Common stuff ################
@@ -156,9 +156,18 @@ sub MIDI::Event::dump {
     }
 
     elsif ( is_note_event(\@event) ) {
-	$extra = is_note_on(\@event) ? "On:  " : "Off: ";
-	$extra .= sprintf("%s%d",
-			 $notes->[$event[3]%12], int($event[3]/12)-2);
+	if ( $event[2] == 9 ) {
+	    if ( is_note_on(\@event) ) {
+		$extra = $MIDI::notenum2percussion{$event[3]};
+	    }
+	    else {
+		$extra = "(Off: " . $MIDI::notenum2percussion{$event[3]} . ")";
+	    }
+	}
+	else {
+	    $extra .= sprintf("%s%d",
+			      $notes->[$event[3]%12], int($event[3]/12)-2);
+	}
     }
 
     $extra = "  ".$extra if $extra;
