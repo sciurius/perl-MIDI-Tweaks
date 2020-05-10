@@ -3,8 +3,8 @@
 # Author          : Johan Vromans
 # Created On      : Wed Jun 11 16:02:35 2008
 # Last Modified By: Johan Vromans
-# Last Modified On: Thu Apr  2 09:32:46 2020
-# Update Count    : 303
+# Last Modified On: Sun May 10 23:13:39 2020
+# Update Count    : 313
 # Status          : Unknown, Use with caution!
 
 ################ Common stuff ################
@@ -55,6 +55,22 @@ my @snotes = (split(/ /, "C C# D D# E F F# G G# A A# B"));
 my @fnotes = (split(/ /, "C Db D Eb E F Gb G Ab A Bb B"));
 my $notes = \@snotes;
 my $ticks;			# ticks per 1/4 note.
+
+sub drumset {
+    my ( $kit ) = @_;
+    # Drum kit names (GM + GS).
+    return "Standard Drum Kit"  if $kit ==  0;
+    return "Room Drum Kit"      if $kit ==  8;
+    return "Power Drum Kit"     if $kit == 16;
+    return "Electric Drum Kit"  if $kit == 24;
+    return "TR808 Drum Kit"     if $kit == 25;
+    return "Jazz Drum Kit"      if $kit == 32;
+    return "Brush Drum Kit"     if $kit == 40;
+    return "Orchestra Kit"      if $kit == 48;
+    return "SFX Kit"            if $kit == 56;
+    return "CM-64/CM-32L Kit"   if $kit == 127;
+    return "$kit";
+}
 
 unless ( caller() ) {
     # Process command line options.
@@ -145,7 +161,9 @@ sub MIDI::Event::dump {
 
     elsif ( $event[EV_TYPE] eq 'patch_change' ) {
 	$extra = sprintf("Channel %d, patch = %s",
-			 $event[2]+1, $MIDI::number2patch{$event[3]});
+			 $event[2]+1,
+			 $event[2] == 9 ? drumset($event[3])
+			 : $MIDI::number2patch{$event[3]});
     }
 
     elsif ( $event[EV_TYPE] eq 'control_change' ) {
@@ -643,4 +661,14 @@ INIT {
     $MIDI::controllers[101] = "Registered Parameter Number (MSB)";
 
     $MIDI::controllers[120+$_] = "Mode Message $_" for 1 .. 7;
+
+    # Additional drum sounds. GS. Not official GM.
+    @MIDI::notenum2percussion{25 .. 34} = (
+      "Snare Roll", "Finger Snap", "High Q", "Slap", "Scratch Push",
+      "Scratch Pull", "Sticks", "Square Click", "Metronome Click", "Metronome Bell",
+    );
+    @MIDI::notenum2percussion{82 .. 87} = (
+      "Shaker", "Jingle Bell", "Belltree", "Castanets", "Mute Surdo", "Open Surdo",
+    );
+    %MIDI::percussion2notenum = reverse %MIDI::notenum2percussion;
 }

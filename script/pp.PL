@@ -5,3 +5,4 @@ open( my $fd, ">", $src);
 open( my $fi, "<", "$src.pl" );
 print { $fd } ( <$fi> );
 close($fd);
+chmod( 0755, $src );
