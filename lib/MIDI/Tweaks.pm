@@ -546,7 +546,7 @@ sub MIDI::Track::time2delta {
     my ($self, $force) = @_;
 
     unless ( $self->{_tweaky_abstime} ) {
-	croak("MIDI::Track::delta2time: Already delta time")
+	croak("MIDI::Track::time2delta: Already delta time")
 	  unless $force;
     }
 
