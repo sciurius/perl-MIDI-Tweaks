@@ -1,5 +1,6 @@
 CHANGES
 lib/MIDI/Tweaks.pm
+lib/MIDI/Tweaks/Dump.pm
 Makefile.PL
 MANIFEST
 README
